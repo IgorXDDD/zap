@@ -1,0 +1,2 @@
+osource "p:/Sources/C/NRF/lbs/boards/shields/*/Kconfig.defconfig"
+osource "P:/nordicsemi/v1.8.0/nrf/boards/shields/*/Kconfig.defconfig"
