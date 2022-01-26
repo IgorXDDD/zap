@@ -33,8 +33,8 @@
 #include <sys/util.h>
 
 
-#include <logging/log.h>
-LOG_MODULE_REGISTER(main, CONFIG_LOG_DEFAULT_LEVEL);
+// #include <logging/log.h>
+// LOG_MODULE_REGISTER(main, CONFIG_LOG_DEFAULT_LEVEL);
 
 #if DT_NODE_HAS_STATUS(DT_INST(0, pwm_leds), okay)
 #define LED_PWM_NODE_ID		DT_INST(0, pwm_leds)
@@ -54,7 +54,6 @@ const int num_leds = ARRAY_SIZE(led_label);
 const struct device *led_pwm;
 
 #define MAX_BRIGHTNESS	100
-
 #define FADE_DELAY_MS	10
 #define FADE_DELAY	K_MSEC(FADE_DELAY_MS)
 //////
@@ -63,25 +62,31 @@ const struct device *led_pwm;
 #define DEVICE_NAME             "ZAP_PROJEKT"
 #define DEVICE_NAME_LEN         (sizeof(DEVICE_NAME) - 1)
 
+#define RUN_LED_BLINK_INTERVAL  500
+#define RUN_LED_BLINK_DELAY		500
 
-#define RUN_STATUS_LED          DK_LED1
-#define CON_STATUS_LED          DK_LED2
-#define RUN_LED_BLINK_INTERVAL  1000
-
-#define USER_LED                DK_LED3
 
 #define USER_BUTTON             DK_BTN1_MSK
+
+#define STATE_OFF				0
+#define STATE_PWM				1
+#define STATE_BLINKING			2
+#define STATE_SWITCHING			3
+#define STATE_SNAKE				4
+#define STATE_LONG_SNAKE		5
+#define STATE_ALWAYS_ON			6
+
 
 static void run_led_test(const struct device *led_pwm, uint8_t led)
 {
 	int err;
 	uint16_t level;
 	/* Increase LED brightness gradually up to the maximum level. */
-	printk("  Increasing brightness gradually");
+	printk("  Increasing brightness gradually\n");
 	for (level = 0; level <= MAX_BRIGHTNESS; level++) {
 		err = led_set_brightness(led_pwm, led, level);
 		if (err < 0) {
-			LOG_ERR("err=%d brightness=%d\n", err, level);
+			// LOG_ERR("err=%d brightness=%d\n", err, level);
 			return;
 		}
 		k_sleep(FADE_DELAY);
@@ -90,7 +95,7 @@ static void run_led_test(const struct device *led_pwm, uint8_t led)
 	for (level = MAX_BRIGHTNESS; level >= 0; level--) {
 		err = led_set_brightness(led_pwm, led, level);
 		if (err < 0) {
-			LOG_ERR("err=%d brightness=%d\n", err, level);
+			// LOG_ERR("err=%d brightness=%d\n", err, level);
 			return;
 		}
 		k_sleep(FADE_DELAY);
@@ -99,10 +104,112 @@ static void run_led_test(const struct device *led_pwm, uint8_t led)
 	/* Turn LED off. */
 	err = led_off(led_pwm, led);
 	if (err < 0) {
-		LOG_ERR("err=%d", err);
+		// LOG_ERR("err=%d", err);
 		return;
 	}
 	printk("  Turned off, loop end");
+}
+
+static void turn_off_leds()
+{
+	dk_set_led(DK_LED1,false);
+	dk_set_led(DK_LED2,false);
+	dk_set_led(DK_LED3,false);
+	dk_set_led(DK_LED4,false);
+}
+
+static int state;
+static void handle_states(const struct device *led_pwm)
+{
+	switch (state)
+	{
+		case STATE_OFF:
+		{
+			turn_off_leds();
+			break;
+		}
+	case STATE_PWM:
+		{
+			run_led_test(led_pwm,0);
+			break;
+		}
+	case STATE_BLINKING:
+	{
+		dk_set_led(DK_LED1,true);
+		dk_set_led(DK_LED2,true);
+		dk_set_led(DK_LED3,true);
+		dk_set_led(DK_LED4,true);
+		k_sleep(K_MSEC(RUN_LED_BLINK_DELAY));
+		dk_set_led(DK_LED1,false);
+		dk_set_led(DK_LED2,false);
+		dk_set_led(DK_LED3,false);
+		dk_set_led(DK_LED4,false);
+
+		break;
+	}
+
+	case STATE_SWITCHING:
+	{
+		turn_off_leds();
+		dk_set_led(DK_LED1,true);
+		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		dk_set_led(DK_LED1,false);
+		dk_set_led(DK_LED2,true);
+		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		dk_set_led(DK_LED2,false);
+		dk_set_led(DK_LED4,true);
+		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		dk_set_led(DK_LED4,false);
+		dk_set_led(DK_LED3,true);
+		break;
+	}
+	case STATE_SNAKE:
+	{
+		dk_set_led(DK_LED3,false);
+		dk_set_led(DK_LED2,true);
+		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		dk_set_led(DK_LED1,false);
+		dk_set_led(DK_LED4,true);
+		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		dk_set_led(DK_LED2,false);
+		dk_set_led(DK_LED3,true);
+		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		dk_set_led(DK_LED4,false);
+		dk_set_led(DK_LED1,true);
+		break;
+	}
+	case STATE_LONG_SNAKE:
+	{
+		dk_set_led(DK_LED1,true);
+		dk_set_led(DK_LED2,false);
+		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		dk_set_led(DK_LED2,true);
+		dk_set_led(DK_LED4,false);
+		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		dk_set_led(DK_LED4,true);
+		dk_set_led(DK_LED3,false);
+		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		dk_set_led(DK_LED1,false);
+		dk_set_led(DK_LED3,true);
+		break;
+	}
+	
+	case STATE_ALWAYS_ON:
+	{
+		dk_set_led(DK_LED1,true);
+		dk_set_led(DK_LED2,true);
+		dk_set_led(DK_LED3,true);
+		dk_set_led(DK_LED4,true);
+		break;
+	}
+	
+	default:
+		{
+			state = 0;
+			break;
+		}
+	}
+
 }
 
 
@@ -125,13 +232,12 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	}
 
 	printk("Connected\n");
-	printk("1.led_pwm = %d\n",led_pwm);
+	printk("1.led_pwm = %p\n",led_pwm);
 	led_pwm = device_get_binding(LED_PWM_DEV_NAME);
 	if (led_pwm) {
 		printk("Found device %s", LED_PWM_DEV_NAME);
-		printk("Found device %s", LED_PWM_DEV_NAME);
 	} else {
-		LOG_ERR("Device %s not found", LED_PWM_DEV_NAME);
+		// LOG_ERR("Device %s not found", LED_PWM_DEV_NAME);
 		printk("Device %s not found", LED_PWM_DEV_NAME);
 		return;
 	}
@@ -149,7 +255,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
 	printk("Disconnected (reason %u)\n", reason);
 
-	dk_set_led_off(CON_STATUS_LED);
+	turn_off_leds();
 }
 
 #ifdef CONFIG_BT_LBS_SECURITY_ENABLED
@@ -227,24 +333,15 @@ static struct bt_conn_auth_cb conn_auth_callbacks;
 static void app_led_cb(bool led_state)
 {
 	if(led_state)
-		run_led_test(led_pwm,0);
+	{		// run_led_test(led_pwm,0);
+		state++;
+		printk("current state: %d\n",state);
+}
 	else
 	{
-		dk_set_led(DK_LED1, true);
-		dk_set_led(DK_LED2, true);
-		dk_set_led(DK_LED3, true);
-		k_sleep(K_MSEC(2000));
-		dk_set_led(DK_LED1, false);
-		dk_set_led(DK_LED2, false);
-		dk_set_led(DK_LED3, false);
-
+		state=0;
+		printk("current state: %d\n",state);
 	}
-	// run_led_test(led_pwm,1);
-	// run_led_test(led_pwm,2);
-	//run_led_test(led_pwm,3);
-	// run_led_test(led_pwm,4);
-	//
-
 }
 
 static bool app_button_cb(void)
@@ -283,7 +380,7 @@ void main(void)
 {
 	int blink_status = 0;
 	int err;
-
+	state=0;
 
 
 
@@ -335,8 +432,7 @@ void main(void)
 	printk("jest dokladnie %d tyle ledow PWM\n",num_leds);
 
 	for (;;) {
-		//dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
-		//run_led_test(led_pwm, 0);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+		handle_states(led_pwm);
+		k_sleep(K_MSEC(RUN_LED_BLINK_DELAY));
 	}
 }
