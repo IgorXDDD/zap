@@ -44,7 +44,7 @@ const int num_leds = ARRAY_SIZE(led_label);
 const struct device *led_pwm;
 
 #define MAX_BRIGHTNESS	100
-#define FADE_DELAY_MS	50
+#define FADE_DELAY_MS	10
 #define FADE_DELAY	K_MSEC(FADE_DELAY_MS)
 
 
@@ -65,13 +65,14 @@ const struct device *led_pwm;
 #define STATE_LONG_SNAKE		5
 #define STATE_ALWAYS_ON			6
 
+#define MAX_STATE			6
+
 
 static void run_led_test(const struct device *led_pwm, uint8_t led)
 {
 	int err;
 	uint16_t level;
 	/* Increase LED brightness gradually up to the maximum level. */
-	printk("  Increasing brightness gradually\n");
 	for (level = 0; level <= MAX_BRIGHTNESS; level++) {
 		err = led_set_brightness(led_pwm, led, level);
 		if (err < 0) {
@@ -93,7 +94,6 @@ static void run_led_test(const struct device *led_pwm, uint8_t led)
 	if (err < 0) {
 		return;
 	}
-	printk("  Turned off, loop end");
 }
 
 static void turn_off_leds()
@@ -220,7 +220,6 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	if (led_pwm) {
 		printk("Found device %s", LED_PWM_DEV_NAME);
 	} else {
-		// LOG_ERR("Device %s not found", LED_PWM_DEV_NAME);
 		printk("Device %s not found", LED_PWM_DEV_NAME);
 		return;
 	}
@@ -231,7 +230,6 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	}
 	printk("2.led_pwm = %d\n",led_pwm);
 
-	//dk_set_led_on(CON_STATUS_LED);
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
@@ -242,19 +240,16 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 }
 
 
-static struct bt_conn_cb conn_callbacks = {
+static struct bt_conn_cb connection_callbacks = {
 	.connected        = connected,
 	.disconnected     = disconnected,
 };
 
 
-static struct bt_conn_auth_cb conn_auth_callbacks;
-
-
-static void app_led_cb(bool led_state)
+static void application_led_callback(bool led_state)
 {
-	if(led_state)
-	{		// run_led_test(led_pwm,0);
+	if(led_state && state < MAX_STATE)
+	{		
 		state++;
 		printk("current state: %d\n",state);
 	}
@@ -266,8 +261,8 @@ static void app_led_cb(bool led_state)
 }
 
 
-static struct bt_lbs_cb lbs_callbacs = {
-	.led_cb    = app_led_cb,
+static struct bt_lbs_cb lbs_callbacks = {
+	.led_cb    = application_led_callback,
 	.button_cb = NULL,
 };
 
@@ -275,7 +270,7 @@ static struct bt_lbs_cb lbs_callbacs = {
 void main(void)
 {
 	int err;
-	state=0;
+	state=STATE_OFF;
 
 	err = dk_leds_init();
 	if (err) {
@@ -284,10 +279,7 @@ void main(void)
 	}
 
 
-	bt_conn_cb_register(&conn_callbacks);
-	if (IS_ENABLED(CONFIG_BT_LBS_SECURITY_ENABLED)) {
-		bt_conn_auth_cb_register(&conn_auth_callbacks);
-	}
+	bt_conn_cb_register(&connection_callbacks);
 
 	err = bt_enable(NULL);
 	if (err) {
@@ -297,7 +289,7 @@ void main(void)
 
 	printk("Bluetooth initialized\n");
 
-	err = bt_lbs_init(&lbs_callbacs);
+	err = bt_lbs_init(&lbs_callbacks);
 	if (err) {
 		printk("Failed to init LBS (err:%d)\n", err);
 		return;
@@ -311,7 +303,7 @@ void main(void)
 	}
 
 	printk("Advertising successfully started\n");
-	printk("jest dokladnie %d tyle ledow PWM\n",num_leds);
+	printk("There are %d PWM leds\n",num_leds);
 
 	for (;;) {
 		handle_states(led_pwm);
