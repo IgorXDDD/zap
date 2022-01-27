@@ -1,8 +1,4 @@
-/*
- * Copyright (c) 2018 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
- */
+
 
 #include <zephyr/types.h>
 #include <stddef.h>
@@ -27,20 +23,16 @@
 #include <dk_buttons_and_leds.h>
 
 
-//////
 #include <device.h>
 #include <drivers/led.h>
 #include <sys/util.h>
 
 
-// #include <logging/log.h>
-// LOG_MODULE_REGISTER(main, CONFIG_LOG_DEFAULT_LEVEL);
-
 #if DT_NODE_HAS_STATUS(DT_INST(0, pwm_leds), okay)
 #define LED_PWM_NODE_ID		DT_INST(0, pwm_leds)
 #define LED_PWM_DEV_NAME	DEVICE_DT_NAME(LED_PWM_NODE_ID)
 #else
-#error "No LED PWM device found"
+#error "No LED PWM device found";
 #endif
 
 #define LED_PWM_LABEL(led_node_id) DT_PROP_OR(led_node_id, label, NULL),
@@ -54,9 +46,8 @@ const int num_leds = ARRAY_SIZE(led_label);
 const struct device *led_pwm;
 
 #define MAX_BRIGHTNESS	100
-#define FADE_DELAY_MS	10
+#define FADE_DELAY_MS	50
 #define FADE_DELAY	K_MSEC(FADE_DELAY_MS)
-//////
 
 
 #define DEVICE_NAME             "ZAP_PROJEKT"
@@ -86,7 +77,6 @@ static void run_led_test(const struct device *led_pwm, uint8_t led)
 	for (level = 0; level <= MAX_BRIGHTNESS; level++) {
 		err = led_set_brightness(led_pwm, led, level);
 		if (err < 0) {
-			// LOG_ERR("err=%d brightness=%d\n", err, level);
 			return;
 		}
 		k_sleep(FADE_DELAY);
@@ -95,7 +85,6 @@ static void run_led_test(const struct device *led_pwm, uint8_t led)
 	for (level = MAX_BRIGHTNESS; level >= 0; level--) {
 		err = led_set_brightness(led_pwm, led, level);
 		if (err < 0) {
-			// LOG_ERR("err=%d brightness=%d\n", err, level);
 			return;
 		}
 		k_sleep(FADE_DELAY);
@@ -104,7 +93,6 @@ static void run_led_test(const struct device *led_pwm, uint8_t led)
 	/* Turn LED off. */
 	err = led_off(led_pwm, led);
 	if (err < 0) {
-		// LOG_ERR("err=%d", err);
 		return;
 	}
 	printk("  Turned off, loop end");
@@ -211,9 +199,6 @@ static void handle_states(const struct device *led_pwm)
 	}
 
 }
-
-
-static bool app_button_state;
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -336,7 +321,7 @@ static void app_led_cb(bool led_state)
 	{		// run_led_test(led_pwm,0);
 		state++;
 		printk("current state: %d\n",state);
-}
+	}
 	else
 	{
 		state=0;
@@ -344,37 +329,18 @@ static void app_led_cb(bool led_state)
 	}
 }
 
-static bool app_button_cb(void)
-{
-	return app_button_state;
-}
+// static bool app_button_cb(void)
+// {
+// 	return app_button_state;
+// }
 
 static struct bt_lbs_cb lbs_callbacs = {
 	.led_cb    = app_led_cb,
-	.button_cb = app_button_cb,
+	.button_cb = NULL,
 };
 
-static void button_changed(uint32_t button_state, uint32_t has_changed)
-{
-	if (has_changed & USER_BUTTON) {
-		uint32_t user_button_state = button_state & USER_BUTTON;
 
-		bt_lbs_send_button_state(user_button_state);
-		app_button_state = user_button_state ? true : false;
-	}
-}
 
-static int init_button(void)
-{
-	int err;
-
-	err = dk_buttons_init(button_changed);
-	if (err) {
-		printk("Cannot init buttons (err: %d)\n", err);
-	}
-
-	return err;
-}
 
 void main(void)
 {
@@ -382,21 +348,12 @@ void main(void)
 	int err;
 	state=0;
 
-
-
-	printk("Starting Bluetooth Peripheral LBS example\n");
-
 	err = dk_leds_init();
 	if (err) {
 		printk("LEDs init failed (err %d)\n", err);
 		return;
 	}
 
-	err = init_button();
-	if (err) {
-		printk("Button init failed (err %d)\n", err);
-		return;
-	}
 
 	bt_conn_cb_register(&conn_callbacks);
 	if (IS_ENABLED(CONFIG_BT_LBS_SECURITY_ENABLED)) {
@@ -411,9 +368,9 @@ void main(void)
 
 	printk("Bluetooth initialized\n");
 
-	//if (IS_ENABLED(CONFIG_SETTINGS)) {
-		settings_load();
-	//}
+
+	settings_load();
+
 
 	err = bt_lbs_init(&lbs_callbacs);
 	if (err) {
