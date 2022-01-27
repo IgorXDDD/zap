@@ -1,5 +1,3 @@
-
-
 #include <zephyr/types.h>
 #include <stddef.h>
 #include <string.h>
@@ -276,7 +274,6 @@ static struct bt_lbs_cb lbs_callbacs = {
 
 void main(void)
 {
-	int blink_status = 0;
 	int err;
 	state=0;
 
