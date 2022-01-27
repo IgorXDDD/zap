@@ -243,77 +243,15 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	turn_off_leds();
 }
 
-#ifdef CONFIG_BT_LBS_SECURITY_ENABLED
-static void security_changed(struct bt_conn *conn, bt_security_t level,
-			     enum bt_security_err err)
-{
-	char addr[BT_ADDR_LE_STR_LEN];
-
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-
-	if (!err) {
-		printk("Security changed: %s level %u\n", addr, level);
-	} else {
-		printk("Security failed: %s level %u err %d\n", addr, level,
-			err);
-	}
-}
-#endif
 
 static struct bt_conn_cb conn_callbacks = {
 	.connected        = connected,
 	.disconnected     = disconnected,
-#ifdef CONFIG_BT_LBS_SECURITY_ENABLED
-	.security_changed = security_changed,
-#endif
 };
 
-#if defined(CONFIG_BT_LBS_SECURITY_ENABLED)
-static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
-{
-	char addr[BT_ADDR_LE_STR_LEN];
 
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-
-	printk("Passkey for %s: %06u\n", addr, passkey);
-}
-
-static void auth_cancel(struct bt_conn *conn)
-{
-	char addr[BT_ADDR_LE_STR_LEN];
-
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-
-	printk("Pairing cancelled: %s\n", addr);
-}
-
-static void pairing_complete(struct bt_conn *conn, bool bonded)
-{
-	char addr[BT_ADDR_LE_STR_LEN];
-
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-
-	printk("Pairing completed: %s, bonded: %d\n", addr, bonded);
-}
-
-static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
-{
-	char addr[BT_ADDR_LE_STR_LEN];
-
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-
-	printk("Pairing failed conn: %s, reason %d\n", addr, reason);
-}
-
-static struct bt_conn_auth_cb conn_auth_callbacks = {
-	.passkey_display = auth_passkey_display,
-	.cancel = auth_cancel,
-	.pairing_complete = pairing_complete,
-	.pairing_failed = pairing_failed
-};
-#else
 static struct bt_conn_auth_cb conn_auth_callbacks;
-#endif
+
 
 static void app_led_cb(bool led_state)
 {
@@ -329,17 +267,11 @@ static void app_led_cb(bool led_state)
 	}
 }
 
-// static bool app_button_cb(void)
-// {
-// 	return app_button_state;
-// }
 
 static struct bt_lbs_cb lbs_callbacs = {
 	.led_cb    = app_led_cb,
 	.button_cb = NULL,
 };
-
-
 
 
 void main(void)
@@ -367,10 +299,6 @@ void main(void)
 	}
 
 	printk("Bluetooth initialized\n");
-
-
-	settings_load();
-
 
 	err = bt_lbs_init(&lbs_callbacs);
 	if (err) {
