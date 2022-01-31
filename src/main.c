@@ -14,7 +14,7 @@
 #include <bluetooth/uuid.h>
 #include <bluetooth/gatt.h>
 
-#include <bluetooth/services/lbs.h>
+#include "svc.h"
 
 #include <settings/settings.h>
 
@@ -104,7 +104,7 @@ static void turn_off_leds()
 	dk_set_led(DK_LED4,false);
 }
 
-static int state;
+static unsigned int state;
 static void handle_states(const struct device *led_pwm)
 {
 	switch (state)
@@ -246,11 +246,11 @@ static struct bt_conn_cb connection_callbacks = {
 };
 
 
-static void application_led_callback(bool led_state)
+static void application_led_callback(uint32_t led_state)
 {
-	if(led_state && state < MAX_STATE)
+	if(led_state < MAX_STATE)
 	{		
-		state++;
+		state = led_state;
 		printk("current state: %d\n",state);
 	}
 	else
@@ -261,9 +261,9 @@ static void application_led_callback(bool led_state)
 }
 
 
-static struct bt_lbs_cb lbs_callbacks = {
+static struct bt_our_cv lbs_callbacks = {
 	.led_cb    = application_led_callback,
-	.button_cb = NULL,
+	// .button_cb = NULL,
 };
 
 
@@ -289,7 +289,7 @@ void main(void)
 
 	printk("Bluetooth initialized\n");
 
-	err = bt_lbs_init(&lbs_callbacks);
+	err = bt_our_init(&lbs_callbacks);
 	if (err) {
 		printk("Failed to init LBS (err:%d)\n", err);
 		return;
