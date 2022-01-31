@@ -84,7 +84,7 @@ static ssize_t write_led2(struct bt_conn *conn,
 
 	if (lbs_cb.led2_cb) {
 		uint8_t val = *((uint8_t *)buf);
-		lbs_cb.led1_cb(val);
+		lbs_cb.led2_cb(val);
 	}
 
 	return len;
@@ -103,7 +103,7 @@ static ssize_t write_led3(struct bt_conn *conn,
 
 	if (lbs_cb.led3_cb) {
 		uint8_t val = *((uint8_t *)buf);
-		lbs_cb.led1_cb(val);
+		lbs_cb.led3_cb(val);
 	}
 
 	return len;
@@ -122,7 +122,7 @@ static ssize_t write_led4(struct bt_conn *conn,
 
 	if (lbs_cb.led4_cb) {
 		uint8_t val = *((uint8_t *)buf);
-		lbs_cb.led1_cb(val);
+		lbs_cb.led4_cb(val);
 	}
 
 	return len;
