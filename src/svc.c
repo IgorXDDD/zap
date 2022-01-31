@@ -37,14 +37,9 @@ static void lbslc_ccc_cfg_changed(const struct bt_gatt_attr *attr,
 	notify_enabled = (value == BT_GATT_CCC_NOTIFY);
 }
 
-static ssize_t write_led(struct bt_conn *conn,
-			 const struct bt_gatt_attr *attr,
-			 const void *buf,
-			 uint16_t len, uint16_t offset, uint8_t flags)
-{
+static ssize_t check_input(struct bt_conn *conn, const struct bt_gatt_attr *attr, uint16_t len, uint16_t offset) {
 	printk("Attribute write, handle: %u, conn: %p\n", attr->handle,
 		(void *)conn);
-
 	if (len != 1U) {
 		printk("Write led: Incorrect data length");
 		return BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
@@ -54,16 +49,80 @@ static ssize_t write_led(struct bt_conn *conn,
 		printk("Write led: Incorrect data offset");
 		return BT_GATT_ERR(BT_ATT_ERR_INVALID_OFFSET);
 	}
+	return 0;
+}
 
-	if (lbs_cb.led_cb) {
+static ssize_t write_led1(struct bt_conn *conn,
+			 const struct bt_gatt_attr *attr,
+			 const void *buf,
+			 uint16_t len, uint16_t offset, uint8_t flags)
+{
+
+	ssize_t err = check_input(conn, attr, len, offset);
+	if( err != 0) {
+		return err;
+	}
+
+	if (lbs_cb.led1_cb) {
 		uint8_t val = *((uint8_t *)buf);
-		lbs_cb.led_cb(val);
-		// if (val == 0x00 || val == 0x01) {
-		// 	lbs_cb.led_cb(val ? true : false);
-		// } else {
-		// 	printk("Write led: Incorrect value");
-		// 	return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
-		// }
+		lbs_cb.led1_cb(val);
+	}
+
+	return len;
+}
+
+static ssize_t write_led2(struct bt_conn *conn,
+			 const struct bt_gatt_attr *attr,
+			 const void *buf,
+			 uint16_t len, uint16_t offset, uint8_t flags)
+{
+
+	ssize_t err = check_input(conn, attr, len, offset);
+	if( err != 0) {
+		return err;
+	}
+
+	if (lbs_cb.led2_cb) {
+		uint8_t val = *((uint8_t *)buf);
+		lbs_cb.led1_cb(val);
+	}
+
+	return len;
+}
+
+static ssize_t write_led3(struct bt_conn *conn,
+			 const struct bt_gatt_attr *attr,
+			 const void *buf,
+			 uint16_t len, uint16_t offset, uint8_t flags)
+{
+
+	ssize_t err = check_input(conn, attr, len, offset);
+	if( err != 0) {
+		return err;
+	}
+
+	if (lbs_cb.led3_cb) {
+		uint8_t val = *((uint8_t *)buf);
+		lbs_cb.led1_cb(val);
+	}
+
+	return len;
+}
+
+static ssize_t write_led4(struct bt_conn *conn,
+			 const struct bt_gatt_attr *attr,
+			 const void *buf,
+			 uint16_t len, uint16_t offset, uint8_t flags)
+{
+
+	ssize_t err = check_input(conn, attr, len, offset);
+	if( err != 0) {
+		return err;
+	}
+
+	if (lbs_cb.led4_cb) {
+		uint8_t val = *((uint8_t *)buf);
+		lbs_cb.led1_cb(val);
 	}
 
 	return len;
@@ -106,16 +165,31 @@ BT_GATT_PRIMARY_SERVICE(BT_UUID_LBS),
 // #endif
 	BT_GATT_CCC(lbslc_ccc_cfg_changed,
 		    BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
-	BT_GATT_CHARACTERISTIC(BT_UUID_LBS_LED,
+	BT_GATT_CHARACTERISTIC(BT_UUID_LBS_LED1,
 			       BT_GATT_CHRC_WRITE,
 			       BT_GATT_PERM_WRITE,
-			       NULL, write_led, NULL),
+			       NULL, write_led1, NULL),
+	BT_GATT_CHARACTERISTIC(BT_UUID_LBS_LED2,
+				BT_GATT_CHRC_WRITE,
+				BT_GATT_PERM_WRITE,
+				NULL, write_led2, NULL),
+	BT_GATT_CHARACTERISTIC(BT_UUID_LBS_LED3,
+				BT_GATT_CHRC_WRITE,
+				BT_GATT_PERM_WRITE,
+				NULL, write_led3, NULL),
+	BT_GATT_CHARACTERISTIC(BT_UUID_LBS_LED4,
+				BT_GATT_CHRC_WRITE,
+				BT_GATT_PERM_WRITE,
+				NULL, write_led4, NULL),
 );
 
 int bt_our_init(struct bt_our_cv *callbacks)
 {
 	if (callbacks) {
-		lbs_cb.led_cb    = callbacks->led_cb;
+		lbs_cb.led1_cb    = callbacks->led1_cb;
+		lbs_cb.led2_cb    = callbacks->led2_cb;
+		lbs_cb.led3_cb    = callbacks->led3_cb;
+		lbs_cb.led4_cb    = callbacks->led4_cb;
 		// lbs_cb.button_cb = callbacks->button_cb;
 	}
 

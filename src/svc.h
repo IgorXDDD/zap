@@ -19,23 +19,38 @@ extern "C" {
 
 
 /** @brief LED Characteristic UUID. */
-#define BT_UUID_LBS_LED_VAL \
+#define BT_UUID_LBS_LED1_VAL \
 	BT_UUID_128_ENCODE(0x00000002, 0x1212, 0xefde, 0x1523, 0x785feabcd123)
+
+#define BT_UUID_LBS_LED2_VAL \
+	BT_UUID_128_ENCODE(0x00000003, 0x1212, 0xefde, 0x1523, 0x785feabcd123)
+
+#define BT_UUID_LBS_LED3_VAL \
+	BT_UUID_128_ENCODE(0x00000004, 0x1212, 0xefde, 0x1523, 0x785feabcd123)
+
+#define BT_UUID_LBS_LED4_VAL \
+	BT_UUID_128_ENCODE(0x00000005, 0x1212, 0xefde, 0x1523, 0x785feabcd123)
 
 
 #define BT_UUID_LBS           BT_UUID_DECLARE_128(BT_UUID_LBS_VAL)
 #define BT_UUID_LBS_BUTTON    BT_UUID_DECLARE_128(BT_UUID_LBS_BUTTON_VAL)
-#define BT_UUID_LBS_LED       BT_UUID_DECLARE_128(BT_UUID_LBS_LED_VAL)
+#define BT_UUID_LBS_LED1       BT_UUID_DECLARE_128(BT_UUID_LBS_LED1_VAL)
+#define BT_UUID_LBS_LED2       BT_UUID_DECLARE_128(BT_UUID_LBS_LED2_VAL)
+#define BT_UUID_LBS_LED3       BT_UUID_DECLARE_128(BT_UUID_LBS_LED3_VAL)
+#define BT_UUID_LBS_LED4       BT_UUID_DECLARE_128(BT_UUID_LBS_LED4_VAL)
 
 /** @brief Callback type for when an LED state change is received. */
-typedef void (*led_cb_t)(const uint32_t led_state);
+typedef void (*led_cb_t)(const uint8_t led_state);
 
 /** @brief Callback type for when the button state is pulled. */
 
 /** @brief Callback struct used by the LBS Service. */
 struct bt_our_cv {
 	/** LED state change callback. */
-	led_cb_t    led_cb;
+	led_cb_t    led1_cb;
+	led_cb_t    led2_cb;
+	led_cb_t    led3_cb;
+	led_cb_t    led4_cb;
 	/** Button read callback. */
 };
 

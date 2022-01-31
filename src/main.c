@@ -68,33 +68,33 @@ const struct device *led_pwm;
 #define MAX_STATE			6
 
 
-static void run_led_test(const struct device *led_pwm, uint8_t led)
-{
-	int err;
-	uint16_t level;
-	/* Increase LED brightness gradually up to the maximum level. */
-	for (level = 0; level <= MAX_BRIGHTNESS; level++) {
-		err = led_set_brightness(led_pwm, led, level);
-		if (err < 0) {
-			return;
-		}
-		k_sleep(FADE_DELAY);
-	}
-	k_sleep(K_MSEC(1000));
-	for (level = MAX_BRIGHTNESS; level >= 0; level--) {
-		err = led_set_brightness(led_pwm, led, level);
-		if (err < 0) {
-			return;
-		}
-		k_sleep(FADE_DELAY);
-	}
-	k_sleep(K_MSEC(1000));
-	/* Turn LED off. */
-	err = led_off(led_pwm, led);
-	if (err < 0) {
-		return;
-	}
-}
+// static void run_led_test(const struct device *led_pwm, uint8_t led)
+// {
+// 	int err;
+// 	uint16_t level;
+// 	/* Increase LED brightness gradually up to the maximum level. */
+// 	for (level = 0; level <= MAX_BRIGHTNESS; level++) {
+// 		err = led_set_brightness(led_pwm, led, level);
+// 		if (err < 0) {
+// 			return;
+// 		}
+// 		k_sleep(FADE_DELAY);
+// 	}
+// 	k_sleep(K_MSEC(1000));
+// 	for (level = MAX_BRIGHTNESS; level >= 0; level--) {
+// 		err = led_set_brightness(led_pwm, led, level);
+// 		if (err < 0) {
+// 			return;
+// 		}
+// 		k_sleep(FADE_DELAY);
+// 	}
+// 	k_sleep(K_MSEC(1000));
+// 	/* Turn LED off. */
+// 	err = led_off(led_pwm, led);
+// 	if (err < 0) {
+// 		return;
+// 	}
+// }
 
 static void turn_off_leds()
 {
@@ -105,98 +105,98 @@ static void turn_off_leds()
 }
 
 static unsigned int state;
-static void handle_states(const struct device *led_pwm)
-{
-	switch (state)
-	{
-		case STATE_OFF:
-		{
-			turn_off_leds();
-			break;
-		}
-	case STATE_PWM:
-		{
-			run_led_test(led_pwm,0);
-			break;
-		}
-	case STATE_BLINKING:
-	{
-		dk_set_led(DK_LED1,true);
-		dk_set_led(DK_LED2,true);
-		dk_set_led(DK_LED3,true);
-		dk_set_led(DK_LED4,true);
-		k_sleep(K_MSEC(RUN_LED_BLINK_DELAY));
-		dk_set_led(DK_LED1,false);
-		dk_set_led(DK_LED2,false);
-		dk_set_led(DK_LED3,false);
-		dk_set_led(DK_LED4,false);
+// static void handle_states(const struct device *led_pwm)
+// {
+// 	switch (state)
+// 	{
+// 		case STATE_OFF:
+// 		{
+// 			turn_off_leds();
+// 			break;
+// 		}
+// 	case STATE_PWM:
+// 		{
+// 			run_led_test(led_pwm,0);
+// 			break;
+// 		}
+// 	case STATE_BLINKING:
+// 	{
+// 		dk_set_led(DK_LED1,true);
+// 		dk_set_led(DK_LED2,true);
+// 		dk_set_led(DK_LED3,true);
+// 		dk_set_led(DK_LED4,true);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_DELAY));
+// 		dk_set_led(DK_LED1,false);
+// 		dk_set_led(DK_LED2,false);
+// 		dk_set_led(DK_LED3,false);
+// 		dk_set_led(DK_LED4,false);
 
-		break;
-	}
+// 		break;
+// 	}
 
-	case STATE_SWITCHING:
-	{
-		turn_off_leds();
-		dk_set_led(DK_LED1,true);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		dk_set_led(DK_LED1,false);
-		dk_set_led(DK_LED2,true);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		dk_set_led(DK_LED2,false);
-		dk_set_led(DK_LED4,true);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		dk_set_led(DK_LED4,false);
-		dk_set_led(DK_LED3,true);
-		break;
-	}
-	case STATE_SNAKE:
-	{
-		dk_set_led(DK_LED3,false);
-		dk_set_led(DK_LED2,true);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		dk_set_led(DK_LED1,false);
-		dk_set_led(DK_LED4,true);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		dk_set_led(DK_LED2,false);
-		dk_set_led(DK_LED3,true);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		dk_set_led(DK_LED4,false);
-		dk_set_led(DK_LED1,true);
-		break;
-	}
-	case STATE_LONG_SNAKE:
-	{
-		dk_set_led(DK_LED1,true);
-		dk_set_led(DK_LED2,false);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		dk_set_led(DK_LED2,true);
-		dk_set_led(DK_LED4,false);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		dk_set_led(DK_LED4,true);
-		dk_set_led(DK_LED3,false);
-		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-		dk_set_led(DK_LED1,false);
-		dk_set_led(DK_LED3,true);
-		break;
-	}
+// 	case STATE_SWITCHING:
+// 	{
+// 		turn_off_leds();
+// 		dk_set_led(DK_LED1,true);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+// 		dk_set_led(DK_LED1,false);
+// 		dk_set_led(DK_LED2,true);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+// 		dk_set_led(DK_LED2,false);
+// 		dk_set_led(DK_LED4,true);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+// 		dk_set_led(DK_LED4,false);
+// 		dk_set_led(DK_LED3,true);
+// 		break;
+// 	}
+// 	case STATE_SNAKE:
+// 	{
+// 		dk_set_led(DK_LED3,false);
+// 		dk_set_led(DK_LED2,true);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+// 		dk_set_led(DK_LED1,false);
+// 		dk_set_led(DK_LED4,true);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+// 		dk_set_led(DK_LED2,false);
+// 		dk_set_led(DK_LED3,true);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+// 		dk_set_led(DK_LED4,false);
+// 		dk_set_led(DK_LED1,true);
+// 		break;
+// 	}
+// 	case STATE_LONG_SNAKE:
+// 	{
+// 		dk_set_led(DK_LED1,true);
+// 		dk_set_led(DK_LED2,false);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+// 		dk_set_led(DK_LED2,true);
+// 		dk_set_led(DK_LED4,false);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+// 		dk_set_led(DK_LED4,true);
+// 		dk_set_led(DK_LED3,false);
+// 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+// 		dk_set_led(DK_LED1,false);
+// 		dk_set_led(DK_LED3,true);
+// 		break;
+// 	}
 	
-	case STATE_ALWAYS_ON:
-	{
-		dk_set_led(DK_LED1,true);
-		dk_set_led(DK_LED2,true);
-		dk_set_led(DK_LED3,true);
-		dk_set_led(DK_LED4,true);
-		break;
-	}
+// 	case STATE_ALWAYS_ON:
+// 	{
+// 		dk_set_led(DK_LED1,true);
+// 		dk_set_led(DK_LED2,true);
+// 		dk_set_led(DK_LED3,true);
+// 		dk_set_led(DK_LED4,true);
+// 		break;
+// 	}
 	
-	default:
-		{
-			state = 0;
-			break;
-		}
-	}
+// 	default:
+// 		{
+// 			state = 0;
+// 			break;
+// 		}
+// 	}
 
-}
+// }
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -246,23 +246,44 @@ static struct bt_conn_cb connection_callbacks = {
 };
 
 
-static void application_led_callback(uint32_t led_state)
+static void application_led1_callback(uint8_t led_state)
 {
-	if(led_state < MAX_STATE)
-	{		
-		state = led_state;
-		printk("current state: %d\n",state);
+	uint8_t brightness = MIN(led_state, MAX_BRIGHTNESS);
+	if(led_set_brightness(led_pwm, 0, brightness) != 0) {
+		printk("Wywalamy się na led_set_brightness");
 	}
-	else
-	{
-		state=0;
-		printk("current state: %d\n",state);
+}
+
+static void application_led2_callback(uint8_t led_state)
+{
+	uint8_t brightness = MIN(led_state, MAX_BRIGHTNESS);
+	if(led_set_brightness(led_pwm, 1, brightness) != 0) {
+		printk("Wywalamy się na led_set_brightness");
+	}
+}
+
+static void application_led3_callback(uint8_t led_state)
+{
+	uint8_t brightness = MIN(led_state, MAX_BRIGHTNESS);
+	if(led_set_brightness(led_pwm, 1, brightness) != 0) {
+		printk("Wywalamy się na led_set_brightness");
+	}
+}
+
+static void application_led4_callback(uint8_t led_state)
+{
+	uint8_t brightness = MIN(led_state, MAX_BRIGHTNESS);
+	if(led_set_brightness(led_pwm, 1, brightness) != 0) {
+		printk("Wywalamy się na led_set_brightness");
 	}
 }
 
 
 static struct bt_our_cv lbs_callbacks = {
-	.led_cb    = application_led_callback,
+	.led1_cb    = application_led1_callback,
+	.led2_cb    = application_led2_callback,
+	.led3_cb    = application_led3_callback,
+	.led4_cb    = application_led4_callback,
 	// .button_cb = NULL,
 };
 
@@ -306,7 +327,7 @@ void main(void)
 	printk("There are %d PWM leds\n",num_leds);
 
 	for (;;) {
-		handle_states(led_pwm);
+		//handle_states(led_pwm);
 		k_sleep(K_MSEC(RUN_LED_BLINK_DELAY));
 	}
 }
