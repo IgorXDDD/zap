@@ -234,56 +234,31 @@ static struct bt_conn_cb connection_callbacks = {
     .disconnected = disconnected,
 };
 
+
+void set_brightness(uint8_t led_num, uint8_t led_state) {
+	if (led_state == 200) {
+		run_led_test(led_pwm, led_num);
+	} else {
+		uint8_t brightness = MIN(led_state, MAX_BRIGHTNESS);
+		printk("LED %d received PWM value: %d\n", led_num + 1, led_state);
+		led_set_brightness(led_pwm, led_num, brightness);
+	}
+}
+
 static void application_led1_callback(uint8_t led_state) {
-  if (led_state == 200) {
-    run_led_test(led_pwm, 0);
-  } else {
-    uint8_t brightness = MIN(led_state, MAX_BRIGHTNESS);
-    printk("1 dostalismy wartosc: %d\n", led_state);
-    led_set_brightness(led_pwm, 0, brightness);
-    // if(led_set_brightness(led_pwm, 0, brightness) != 0) {
-    // 	printk("Wywalamy się na led_set_brightness");
-    // }
-  }
+	set_brightness(0, led_state);
 }
 
 static void application_led2_callback(uint8_t led_state) {
-  if (led_state == 200) {
-    run_led_test(led_pwm, 1);
-  } else {
-    uint8_t brightness = MIN(led_state, MAX_BRIGHTNESS);
-    printk("2 dostalismy wartosc: %d\n", led_state);
-    // led_set_brightness(led_pwm,2,brightness);
-    if (led_set_brightness(led_pwm, 1, brightness) != 0) {
-      printk("Wywalamy się na led_set_brightness");
-    }
-  }
+	set_brightness(1, led_state);
 }
 
 static void application_led3_callback(uint8_t led_state) {
-  if (led_state == 200) {
-    run_led_test(led_pwm, 2);
-  } else {
-    uint8_t brightness = MIN(led_state, MAX_BRIGHTNESS);
-    printk("4 dostalismy wartosc: %d\n", led_state);
-    // led_set_brightness(led_pwm,3,brightness);
-    if (led_set_brightness(led_pwm, 2, brightness) != 0) {
-      printk("Wywalamy się na led_set_brightness");
-    }
-  }
+	set_brightness(2, led_state);
 }
 
 static void application_led4_callback(uint8_t led_state) {
-  if (led_state == 200) {
-    run_led_test(led_pwm, 3);
-  } else {
-    uint8_t brightness = MIN(led_state, MAX_BRIGHTNESS);
-    printk("4 dostalismy wartosc: %d\n", led_state);
-    // led_set_brightness(led_pwm,4,brightness);
-    if (led_set_brightness(led_pwm, 3, brightness) != 0) {
-      printk("Wywalamy się na led_set_brightness");
-    }
-  }
+	set_brightness(3, led_state);
 }
 
 static struct bt_our_cv lbs_callbacks = {
