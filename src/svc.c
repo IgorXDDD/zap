@@ -17,7 +17,7 @@
 
 
 static bool                   notify_enabled;
-static struct bt_led_svc_cbs       lbs_cb;
+static struct bt_led_svc_cbs       led_svc_cbs;
 
 static void lbslc_ccc_cfg_changed(const struct bt_gatt_attr *attr,
 				  uint16_t value)
@@ -64,7 +64,7 @@ static ssize_t write_led1(struct bt_conn *conn,
 			 const void *buf,
 			 uint16_t len, uint16_t offset, uint8_t flags)
 {
-	return run_callback(conn, attr, buf, len, offset, flags, lbs_cb.led1_cb);
+	return run_callback(conn, attr, buf, len, offset, flags, led_svc_cbs.led1_cb);
 }
 
 static ssize_t write_led2(struct bt_conn *conn,
@@ -73,7 +73,7 @@ static ssize_t write_led2(struct bt_conn *conn,
 			 uint16_t len, uint16_t offset, uint8_t flags)
 {
 
-	return run_callback(conn, attr, buf, len, offset, flags, lbs_cb.led2_cb);
+	return run_callback(conn, attr, buf, len, offset, flags, led_svc_cbs.led2_cb);
 }
 
 static ssize_t write_led3(struct bt_conn *conn,
@@ -82,7 +82,7 @@ static ssize_t write_led3(struct bt_conn *conn,
 			 uint16_t len, uint16_t offset, uint8_t flags)
 {
 
-	return run_callback(conn, attr, buf, len, offset, flags, lbs_cb.led3_cb);
+	return run_callback(conn, attr, buf, len, offset, flags, led_svc_cbs.led3_cb);
 }
 
 static ssize_t write_led4(struct bt_conn *conn,
@@ -90,7 +90,7 @@ static ssize_t write_led4(struct bt_conn *conn,
 			 const void *buf,
 			 uint16_t len, uint16_t offset, uint8_t flags)
 {
-	return run_callback(conn, attr, buf, len, offset, flags, lbs_cb.led4_cb);
+	return run_callback(conn, attr, buf, len, offset, flags, led_svc_cbs.led4_cb);
 }
 
 
@@ -119,10 +119,10 @@ BT_GATT_PRIMARY_SERVICE(BT_UUID_LED_SVC),
 int bt_led_svc_init(struct bt_led_svc_cbs *callbacks)
 {
 	if (callbacks) {
-		lbs_cb.led1_cb    = callbacks->led1_cb;
-		lbs_cb.led2_cb    = callbacks->led2_cb;
-		lbs_cb.led3_cb    = callbacks->led3_cb;
-		lbs_cb.led4_cb    = callbacks->led4_cb;
+		led_svc_cbs.led1_cb    = callbacks->led1_cb;
+		led_svc_cbs.led2_cb    = callbacks->led2_cb;
+		led_svc_cbs.led3_cb    = callbacks->led3_cb;
+		led_svc_cbs.led4_cb    = callbacks->led4_cb;
 	}
 
 	return 0;

@@ -1,5 +1,5 @@
-#ifndef BT_LBS_H_
-#define BT_LBS_H_
+#ifndef BT_LED_SVC_H_
+#define BT_LED_SVC_H_
 
 
 
@@ -51,8 +51,5 @@ int bt_led_svc_init(struct bt_led_svc_cbs *callbacks);
 }
 #endif
 
-/**
- * @}
- */
 
-#endif /* BT_LBS_H_ */
+#endif /* BT_LED_SVC_H_ */

@@ -51,17 +51,7 @@ const struct device *led_pwm;
 #define RUN_LED_BLINK_INTERVAL 500
 #define RUN_LED_BLINK_DELAY 500
 
-#define USER_BUTTON DK_BTN1_MSK
 
-#define STATE_OFF 0
-#define STATE_PWM 1
-#define STATE_BLINKING 2
-#define STATE_SWITCHING 3
-#define STATE_SNAKE 4
-#define STATE_LONG_SNAKE 5
-#define STATE_ALWAYS_ON 6
-
-#define MAX_STATE 6
 
 static void run_led_test(const struct device *led_pwm, uint8_t led) {
   int err;
@@ -91,13 +81,13 @@ static void run_led_test(const struct device *led_pwm, uint8_t led) {
 }
 
 static void turn_off_leds() {
-  dk_set_led(DK_LED1, false);
-  dk_set_led(DK_LED2, false);
-  dk_set_led(DK_LED3, false);
-  dk_set_led(DK_LED4, false);
+  for(int i=0; i < num_leds; i++) {
+    led_off(led_pwm, i);
+  }
 }
 
 static int pwm_leds_init() {
+
   led_pwm = device_get_binding(LED_PWM_DEV_NAME);
   if (led_pwm) {
     printk("Found LED PWM device: %s\n", LED_PWM_DEV_NAME);
@@ -110,7 +100,6 @@ static int pwm_leds_init() {
     printk("No LEDs found for %s\n", LED_PWM_DEV_NAME);
     return -1;
   }
-  printk("LED PWM = %p\n", led_pwm);
   printk("Number of PWM LEDs: %d\n", num_leds);
   return 0;
 }
@@ -136,7 +125,6 @@ static void connected(struct bt_conn *conn, uint8_t err) {
 
 static void disconnected(struct bt_conn *conn, uint8_t reason) {
   printk("Disconnected (reason %u)\n", reason);
-
   turn_off_leds();
 }
 
@@ -184,9 +172,9 @@ static struct bt_led_svc_cbs led_svc_callbacks = {
 void main(void) {
   int err;
 
-  err = dk_leds_init();
+  err = pwm_leds_init();
   if (err) {
-    printk("LEDs init failed (err %d)\n", err);
+    printk("PWM leds init failed (err:%D)\n", err);
     return;
   }
 
@@ -200,15 +188,9 @@ void main(void) {
 
   printk("Bluetooth initialized\n");
 
-  err = pwm_leds_init();
-  if (err) {
-    printk("PWM leds init failed (err:%D)\n", err);
-    return;
-  }
-
   err = bt_led_svc_init(&led_svc_callbacks);
   if (err) {
-    printk("Failed to init LBS (err:%d)\n", err);
+    printk("Failed to init LED service (err:%d)\n", err);
     return;
   }
 
@@ -221,7 +203,6 @@ void main(void) {
   printk("Advertising successfully started\n");
 
   for (;;) {
-    // handle_states(led_pwm);
     k_sleep(K_MSEC(RUN_LED_BLINK_DELAY));
   }
 }
