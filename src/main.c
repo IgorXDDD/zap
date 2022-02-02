@@ -97,6 +97,24 @@ static void turn_off_leds() {
   dk_set_led(DK_LED4, false);
 }
 
+static int pwm_leds_init() {
+  led_pwm = device_get_binding(LED_PWM_DEV_NAME);
+  if (led_pwm) {
+    printk("Found LED PWM device: %s\n", LED_PWM_DEV_NAME);
+  } else {
+    printk("Device %s not found", LED_PWM_DEV_NAME);
+    return -1;
+  }
+
+  if (!num_leds) {
+    printk("No LEDs found for %s\n", LED_PWM_DEV_NAME);
+    return -1;
+  }
+  printk("LED PWM = %p\n", led_pwm);
+  printk("Number of PWM LEDs: %d\n", num_leds);
+  return 0;
+}
+
 static const struct bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
     BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
@@ -113,20 +131,7 @@ static void connected(struct bt_conn *conn, uint8_t err) {
   }
 
   printk("Connected\n");
-  printk("1.led_pwm = %p\n", led_pwm);
-  led_pwm = device_get_binding(LED_PWM_DEV_NAME);
-  if (led_pwm) {
-    printk("Found device %s", LED_PWM_DEV_NAME);
-  } else {
-    printk("Device %s not found", LED_PWM_DEV_NAME);
-    return;
-  }
 
-  if (!num_leds) {
-    printk("No LEDs found for %s", LED_PWM_DEV_NAME);
-    return;
-  }
-  printk("2.led_pwm = %d\n", led_pwm);
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason) {
@@ -169,7 +174,7 @@ static void application_led4_callback(uint8_t led_state) {
 	set_brightness(3, led_state);
 }
 
-static struct bt_our_cv lbs_callbacks = {
+static struct bt_led_svc_cbs led_svc_callbacks = {
     .led1_cb = application_led1_callback,
     .led2_cb = application_led2_callback,
     .led3_cb = application_led3_callback,
@@ -195,7 +200,13 @@ void main(void) {
 
   printk("Bluetooth initialized\n");
 
-  err = bt_led_svc_init(&lbs_callbacks);
+  err = pwm_leds_init();
+  if (err) {
+    printk("PWM leds init failed (err:%D)\n", err);
+    return;
+  }
+
+  err = bt_led_svc_init(&led_svc_callbacks);
   if (err) {
     printk("Failed to init LBS (err:%d)\n", err);
     return;
@@ -208,7 +219,6 @@ void main(void) {
   }
 
   printk("Advertising successfully started\n");
-  printk("There are %d PWM leds\n", num_leds);
 
   for (;;) {
     // handle_states(led_pwm);

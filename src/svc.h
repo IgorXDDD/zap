@@ -36,7 +36,7 @@ extern "C" {
 typedef void (*led_cb_t)(const uint8_t led_state);
 
 
-struct bt_our_cv {
+struct bt_led_svc_cbs {
 	/** LED state change callback. */
 	led_cb_t    led1_cb;
 	led_cb_t    led2_cb;
@@ -44,7 +44,7 @@ struct bt_our_cv {
 	led_cb_t    led4_cb;
 };
 
-int bt_led_svc_init(struct bt_our_cv *callbacks);
+int bt_led_svc_init(struct bt_led_svc_cbs *callbacks);
 
 
 #ifdef __cplusplus
